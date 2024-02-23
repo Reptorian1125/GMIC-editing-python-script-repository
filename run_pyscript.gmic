@@ -1,0 +1,48 @@
+#@cli run_pyscript:
+#@cli : Run user-defined Python scripts. If you provide no argument, then it will print description on how to use your script. If you ran into a error, run without an argument, and modify your argument to make this work.
+run_pyscript:
+    skip "${1=}"
+    
+    _available_variables=""
+    _number_of_available_scripts=0
+    script_file_info="D:\\Documents\\Python\\gmic-scripting-tools\\"
+
+    _$0_info shift_vars_num,GMIC-Increment-Arg-Number.py,"Shift variables numbers."
+    _$0_info modify_gui_vars,GUI-variable-inputs.py,"Modify GUI Variables to append numbers or to remove numbers into GUI Variables."
+    
+    if narg($1)
+        if isint($1)
+            id=${arg\ $1+1,$_available_variables}
+        else
+            id=$1
+        fi
+        
+        test_input=${_script_${id}_filename}
+        if !narg($test_input) error invalid_arg fi
+        script_file_info.=$test_input   
+        
+        e[0] "Executing script "${_script_${id}_filename}!\n
+        exec 1,"python "$script_file_info
+        e[0] "Finished executing script "${_script_${id}_filename}!
+    else
+        e[0] "- This command is used to run a user-defined Python script. Below are available args (include next to \":\") -"
+        repeat $_number_of_available_scripts {
+            current_variable=${arg\ $>+1,$_available_variables}
+            e[0] Arg\ $>\ :\ $current_variable\ -\ ${_script_${>}_helper}
+        }
+    fi
+    
+    e[0] "Quit G'MIC interpreter." q
+_run_pyscript_info:
+    check "$#==3"
+
+    if narg($_available_variables)
+        _available_variables.=,$1
+    else
+        _available_variables.=$1
+    fi
+    
+    _script_$1_filename="$2"
+    _script_$1_helper="$3"
+    
+    _number_of_available_scripts+=1
